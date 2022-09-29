@@ -139,6 +139,20 @@ int main(int argc, char** argv)
 
 		/** TODO: create two pipes **/
 
+		// Create the parent to child pipe 
+		if (pipe(parentToChildPipe) < 0) 
+		{
+			perror("pipe");
+			exit(-1);
+		}
+
+		// Create the child to parent pipe
+		if (pipe(childToParentPipe) < 0) 
+		{
+			perror("pipe");
+			exit(-1);
+		}
+
 		/* Fork a child process and save the id */
 		if ((pid = fork()) < 0)
 		{
