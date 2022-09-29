@@ -56,6 +56,11 @@ void computeHash(const string& hashProgName)
 	
 	
 	/** TODO: Now, lets read a message from the parent **/
+	if (read(parentToChildPipe[READ_END], fileNameRecv, sizeof(fileNameRecv)) < 0)
+	{
+		perror("read");
+		exit(-1);
+	}
 	
 	/* Glue together a command line <PROGRAM NAME>. 
  	 * For example, sha512sum fileName.
@@ -79,6 +84,11 @@ void computeHash(const string& hashProgName)
 	 .
 	 .
 	*/
+	if (write(childToParentPipe[WRITE_END], hashValue, sizeof(hashValue)) < 0)
+	{
+		perror("write");
+		exit(-1);
+	}
 
 	/* The child terminates */
 	exit(0);
@@ -91,6 +101,20 @@ void parentFunc(const string& hashProgName)
 	/* I am the parent */
 
 	/** TODO: close the unused ends of two pipes. **/
+
+	/* Close the write-end of the child-to-parent pipe */
+	if (close(childToParentPipe[WRITE_END]) < 0) 
+	{
+		perror("close");
+		exit(-1);
+	}
+
+	/* Close the read-end of the parent-to-child pipe */
+	if (close(parentToChildPipe[READ_END]) < 0)
+	{
+		perror("close");
+		exit(-1);
+	}
 
 	/* The buffer to hold the string received from the child */
 	char hashValue[HASH_VALUE_LENGTH];
@@ -110,6 +134,11 @@ void parentFunc(const string& hashProgName)
 	  .
 	  .
 	  */
+	 if (read(childToParentPipe[READ_END], hashValue, sizeof(hashValue)) < 0)
+	 {
+		perror("read");
+		exit(-1);
+	 }
 
 	  /* Print the hash value */
 	  fprintf(stdout, "%s HASH VALUE: %s\n", hashProgName.c_str(), hashValue);
@@ -139,14 +168,14 @@ int main(int argc, char** argv)
 
 		/** TODO: create two pipes **/
 
-		// Create the parent to child pipe 
+		/* Create the parent to child pipe */
 		if (pipe(parentToChildPipe) < 0) 
 		{
 			perror("pipe");
 			exit(-1);
 		}
 
-		// Create the child to parent pipe
+		/* Create the child to parent pipe */
 		if (pipe(childToParentPipe) < 0) 
 		{
 			perror("pipe");
@@ -159,11 +188,25 @@ int main(int argc, char** argv)
 			perror("fork");
 			exit(-1);
 		}
+
 		/* I am a child */
 		else if (pid == 0)
-
 		{
 			/** TODO: close the unused ends of two pipes **/
+
+			/* Close the unused end of the parent */
+			if (close(parentToChildPipe[WRITE_END]) < 0)
+			{
+				perror("close");
+				exit(-1);
+			}
+
+			/* Close the unused end of the child */
+			if (close(childToParentPipe[READ_END]) < 0)
+			{
+				perror("close");
+				exit(-1);
+			}
 
 			/* Compute the hash */
 			computeHash(hashProgs[hashAlgNum]);
