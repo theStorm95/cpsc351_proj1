@@ -104,6 +104,18 @@ void computeHash(const string& hashProgName)
 		exit(-1);
 	}
 
+	if (close(parentToChildPipe[READ_END]) < 0)
+	{
+		perror("close");
+		exit(-1);
+	}
+
+	if (close(childToParentPipe[WRITE_END]) < 0)
+	{
+		perror("close");
+		exit(-1);
+	}
+
 	/* The child terminates */
 	exit(0);
 	
@@ -156,6 +168,18 @@ void parentFunc(const string& hashProgName)
 	 if (read(childToParentPipe[READ_END], hashValue, sizeof(hashValue)) < 0)
 	 {
 		perror("read");
+		exit(-1);
+	 }
+
+	 if (close(parentToChildPipe[WRITE_END]) < 0)
+	 {
+		perror("close");
+		exit(-1);
+	 }
+
+	 if (close(childToParentPipe[READ_END]) < 0)
+	 {
+		perror("close");
 		exit(-1);
 	 }
 
