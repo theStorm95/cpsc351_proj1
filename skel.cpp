@@ -76,7 +76,21 @@ void computeHash(const string& hashProgName)
 	.
 	.
 	*/
-		
+
+	FILE* hashOut;
+	hashOut = popen(cmdLine.c_str(), "r");
+
+	if (fread(hashValue, sizeof(char), sizeof(char) * HASH_VALUE_LENGTH, hashOut) < 0)
+	{
+		perror("fread");
+		exit(-1);
+	}
+
+	if (pclose(hashOut) < 0)
+	{
+		perror("pclose");
+		exit(-1);
+	}
 	
 		
 	/* TODO: Send a string to the parent 
@@ -128,6 +142,11 @@ void parentFunc(const string& hashProgName)
 	 .
 	 .
 	 */
+	if (write(parentToChildPipe[WRITE_END], fileName.c_str(), sizeof(fileName)) < 0) 
+	{
+		perror("write");
+		exit(-1);
+	}
 
 	 /* TODO: Read the string sent by the child
 	  .
